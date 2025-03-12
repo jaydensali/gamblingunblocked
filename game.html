@@ -151,6 +151,12 @@
             color: gray;
         }
 
+        #pityCounter {
+            font-size: 18px;
+            color: white;
+            margin-top: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -160,6 +166,7 @@
         <button id="rollButton" onclick="rollRarity()">Roll</button>
         <button onclick="toggleBestiary()">Bestiary</button>
         <div id="result"></div>
+        <div id="pityCounter">Pity: 0/50</div>
         <div id="bestiary"></div>
     </div>
 
@@ -174,19 +181,17 @@
             { name: "Divine", gradient: "gold", weight: 2 },
             { name: "Celestial", gradient: "skyblue", weight: 1.5 },
             { name: "Abyssal", gradient: "black", weight: 0.8 },
-            { name: "Omniscient", gradient: "white", textColor: "black", weight: 0.2 },
+            { name: "Omniscient", gradient: "white", weight: 0.2 },
             { name: "Ethereal", gradient: "cyan", weight: 0.15 },
             { name: "Phantom", gradient: "violet", weight: 0.1 },
             { name: "Arcane", gradient: "magenta", weight: 0.08 },
             { name: "Voidborn", gradient: "darkblue", weight: 0.05 },
-            { name: "Infinity", gradient: "silver", weight: 0.02 },
-            // New rarities added with gradient transitions
-            { name: "Titanic", gradient: "linear-gradient(45deg, #FF00FF, #00FFFF)", weight: 0.01 },
-            { name: "Astral", gradient: "linear-gradient(45deg, #7F00FF, #FF00FF)", weight: 0.005 },
-            { name: "Lunar", gradient: "linear-gradient(45deg, #D3D3D3, #A9A9A9)", weight: 0.003 },
-            { name: "Stellar", gradient: "linear-gradient(45deg, #4B0082, #8A2BE2)", weight: 0.002 },
-            { name: "Eclipse", gradient: "linear-gradient(45deg, #9400D3, #4B0082)", weight: 0.001 }
+            { name: "Infinity", gradient: "silver", weight: 0.02 }
         ];
+
+        let pity = 0;
+        let discovered = getCookie("bestiary") || [];
+        let rollCooldown = false;
 
         function getCookie(name) {
             let cookies = document.cookie.split(';');
@@ -204,9 +209,6 @@
             expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
             document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
         }
-
-        let discovered = getCookie("bestiary") || [];
-        let rollCooldown = false;
 
         function saveBestiary() {
             setCookie("bestiary", discovered);
@@ -234,6 +236,13 @@
                 }
             }
 
+            // Increase pity counter and check for max pity
+            pity++;
+            if (pity > 50) pity = 50;
+
+            // Update pity counter display
+            document.getElementById("pityCounter").innerText = `Pity: ${pity}/50`;
+
             discovered.push(selectedRarity.name);
             saveBestiary();
 
@@ -251,26 +260,16 @@
 
             flashScreen(selectedRarity.gradient);
 
-            if (rarities.findIndex(r => r.name === selectedRarity.name) >= rarities.length - 5) {
-                playCutscene(selectedRarity.name);
-            }
+            toggleBestiary();
         }
 
         function flashScreen(color) {
-            if (rarities.findIndex(r => r.name === color) >= rarities.findIndex(r => r.name === "Mythic")) {
-                let flashOverlay = document.getElementById("flashOverlay");
-                flashOverlay.style.backgroundColor = color;
-                flashOverlay.style.display = "block";
-                setTimeout(() => {
-                    flashOverlay.style.display = "none";
-                }, 300);
-            }
-        }
-
-        function playCutscene(rarityName) {
+            let flashOverlay = document.getElementById("flashOverlay");
+            flashOverlay.style.backgroundColor = color;
+            flashOverlay.style.display = "block";
             setTimeout(() => {
-                alert("You obtained a rare item: " + rarityName + "! A mysterious force surrounds you...");
-            }, 500);
+                flashOverlay.style.display = "none";
+            }, 300);
         }
 
         function toggleBestiary() {
@@ -283,13 +282,8 @@
                                     <div class="name">${discovered.includes(rarity.name) ? rarity.name : "???"}</div>
                                   </div>`;
             });
-
             bestiaryDiv.innerHTML = bestiaryHTML;
         }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            toggleBestiary();
-        });
     </script>
 </body>
 </html>
