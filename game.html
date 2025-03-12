@@ -151,10 +151,19 @@
             color: gray;
         }
 
+        /* Pity Counter Styling */
         #pityCounter {
-            font-size: 18px;
+            font-size: 20px;
             color: white;
-            margin-top: 10px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            font-weight: bold;
         }
 
     </style>
@@ -166,9 +175,10 @@
         <button id="rollButton" onclick="rollRarity()">Roll</button>
         <button onclick="toggleBestiary()">Bestiary</button>
         <div id="result"></div>
-        <div id="pityCounter">Pity: 0/50</div>
         <div id="bestiary"></div>
     </div>
+
+    <div id="pityCounter">Pity: 0/50</div>
 
     <script>
         const rarities = [
@@ -181,15 +191,22 @@
             { name: "Divine", gradient: "gold", weight: 2 },
             { name: "Celestial", gradient: "skyblue", weight: 1.5 },
             { name: "Abyssal", gradient: "black", weight: 0.8 },
-            { name: "Omniscient", gradient: "white", weight: 0.2 },
+            { name: "Omniscient", gradient: "white", weight: 0.2, textColor: "black" },
             { name: "Ethereal", gradient: "cyan", weight: 0.15 },
             { name: "Phantom", gradient: "violet", weight: 0.1 },
             { name: "Arcane", gradient: "magenta", weight: 0.08 },
             { name: "Voidborn", gradient: "darkblue", weight: 0.05 },
-            { name: "Infinity", gradient: "silver", weight: 0.02 }
+            { name: "Infinity", gradient: "silver", weight: 0.02 },
+            { name: "Infernal", gradient: "darkred", weight: 0.01 },
+            { name: "Celestia", gradient: "purple", weight: 0.005 },
+            { name: "Titanic", gradient: "brown", weight: 0.004 },
+            { name: "Astral", gradient: "indigo", weight: 0.003 },
+            { name: "Empyrean", gradient: "teal", weight: 0.002 },
+            { name: "Radiant", gradient: "yellow", weight: 0.001 }
         ];
 
         let pity = 0;
+        let luckMultiplier = 1;  // Luck multiplier (1 = normal, 2 = doubled)
         let discovered = getCookie("bestiary") || [];
         let rollCooldown = false;
 
@@ -240,6 +257,12 @@
             pity++;
             if (pity > 50) pity = 50;
 
+            // Luck multiplier effect: Reset pity to 0 when luck is doubled and pity is 50
+            if (pity === 50 && luckMultiplier === 2) {
+                pity = 0;
+                luckMultiplier = 1;  // Reset luckMultiplier back to 1 after it is used
+            }
+
             // Update pity counter display
             document.getElementById("pityCounter").innerText = `Pity: ${pity}/50`;
 
@@ -247,7 +270,7 @@
             saveBestiary();
 
             let resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<div class='rarity rolling' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
+            resultDiv.innerHTML = `<div class='rarity rolling' style='background: ${selectedRarity.gradient}; color: ${selectedRarity.textColor || "white"}'>${selectedRarity.name}</div>`;
 
             setTimeout(() => {
                 resultDiv.querySelector('.rarity').style.opacity = 1;
@@ -258,7 +281,13 @@
                 resultDiv.querySelector('.rarity').style.animation = "";  // Reset animation after it finishes
             }, 1000);
 
-            flashScreen(selectedRarity.gradient);
+            // Flash the screen only when rarities above "Omniscient" are rolled
+            if (selectedRarity.name === "Omniscient" || selectedRarity.name === "Ethereal" || selectedRarity.name === "Phantom" || selectedRarity.name === "Arcane" || selectedRarity.name === "Voidborn" || selectedRarity.name === "Infinity") {
+                flashScreen(selectedRarity.gradient);
+                pity = 0; // Reset pity if a high rarity is rolled
+                document.getElementById("pityCounter").innerText = `Pity: 0/50`;
+                luckMultiplier = 1;  // Reset luckMultiplier when a high rarity is rolled
+            }
 
             toggleBestiary();
         }
