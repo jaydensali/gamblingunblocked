@@ -182,11 +182,28 @@
             { name: "Infinity", gradient: "silver", weight: 0.02 }
         ];
 
-        let discovered = new Set(JSON.parse(localStorage.getItem("bestiary")) || []);
+        function getCookie(name) {
+            let cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                let [key, value] = cookie.trim().split('=');
+                if (key === name) {
+                    return JSON.parse(decodeURIComponent(value));
+                }
+            }
+            return [];
+        }
+
+        function setCookie(name, value, days = 7) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
+        }
+
+        let discovered = getCookie("bestiary") || [];
         let rollCooldown = false;
 
         function saveBestiary() {
-            localStorage.setItem("bestiary", JSON.stringify([...discovered]));
+            setCookie("bestiary", discovered);
         }
 
         function rollRarity() {
@@ -211,7 +228,7 @@
                 }
             }
 
-            discovered.add(selectedRarity.name);
+            discovered.push(selectedRarity.name);
             saveBestiary();
 
             let resultDiv = document.getElementById("result");
@@ -256,8 +273,8 @@
 
             let bestiaryHTML = "<h2>Bestiary</h2>";
             rarities.forEach(rarity => {
-                bestiaryHTML += `<div class='bestiary-item' style='background: ${discovered.has(rarity.name) ? rarity.gradient : "#444"}'>
-                                    <div class="name">${discovered.has(rarity.name) ? rarity.name : "???"}</div>
+                bestiaryHTML += `<div class='bestiary-item' style='background: ${discovered.includes(rarity.name) ? rarity.gradient : "#444"}'>
+                                    <div class="name">${discovered.includes(rarity.name) ? rarity.name : "???"}</div>
                                   </div>`;
             });
 
