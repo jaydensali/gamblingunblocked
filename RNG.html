@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gambling Unblocked</title>
+    <title>Greed RNG</title>
     <style>
         /* General Body Styling */
         body {
@@ -51,6 +51,18 @@
             background: #666;
         }
 
+        /* Pity and Luck Display */
+        #pity {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+        }
+
         /* Rarity Display */
         .rarity {
             display: inline-block;
@@ -72,6 +84,17 @@
         @keyframes roll {
             0% { opacity: 0; transform: scale(0.5); }
             50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Enhanced Animation for High Rarities */
+        .rarity.high-impact {
+            animation: highImpact 1.5s ease-in-out;
+        }
+
+        @keyframes highImpact {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.8); }
             100% { opacity: 1; transform: scale(1); }
         }
 
@@ -151,17 +174,46 @@
             color: gray;
         }
 
+        /* Trade Button and Code Display */
+        #tradeButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+        }
+
+        #tradeCode {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            display: none;
+        }
+
     </style>
 </head>
 <body>
     <div id="flashOverlay"></div>
     <div class="container">
-        <h1>Gambling Unblocked</h1>
+        <h1>Greed RNG</h1>
         <button id="rollButton" onclick="rollRarity()">Roll</button>
         <button onclick="toggleBestiary()">Bestiary</button>
         <div id="result"></div>
         <div id="bestiary"></div>
     </div>
+
+    <!-- Pity and Trade Section -->
+    <div id="pity">Rolls until Max Pity: <span id="pityCount">50</span></div>
+    <button id="tradeButton" onclick="toggleTradeCode()">Generate Trading Code</button>
+    <div id="tradeCode">Your Trade Code: <span id="tradeCodeValue"></span></div>
 
     <script>
         const rarities = [
@@ -182,6 +234,27 @@
             { name: "Infinity", gradient: "silver", weight: 0.02 }
         ];
 
+        let discovered = getCookie("bestiary") || [];
+        let rollCount = parseInt(getCookie("rollCount") || "0");
+        let maxPity = false;
+        let pityThreshold = 50;
+
+        // Pity System
+        function updatePity() {
+            const pityCount = document.getElementById("pityCount");
+            pityCount.textContent = pityThreshold - rollCount;
+            if (rollCount >= pityThreshold) {
+                maxPity = true;
+            }
+        }
+
+        // Save Data to Cookie
+        function setCookie(name, value, days = 7) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
+        }
+
         function getCookie(name) {
             let cookies = document.cookie.split(';');
             for (let cookie of cookies) {
@@ -193,19 +266,13 @@
             return [];
         }
 
-        function setCookie(name, value, days = 7) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
+        // Trade System
+        function generateTradeCode() {
+            const code = Math.random().toString(36).substring(2, 10);
+            document.getElementById("tradeCodeValue").textContent = code;
         }
 
-        let discovered = getCookie("bestiary") || [];
-        let rollCooldown = false;
-
-        function saveBestiary() {
-            setCookie("bestiary", discovered);
-        }
-
+        // Roll Rarity with Pity and Luck Increase
         function rollRarity() {
             if (rollCooldown) return;
             rollCooldown = true;
@@ -213,7 +280,7 @@
             setTimeout(() => {
                 rollCooldown = false;
                 document.getElementById("rollButton").disabled = false;
-            }, 500);  // Cooldown reduced to 0.5 seconds
+            }, 500);
 
             let totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
             let random = Math.random() * totalWeight;
@@ -229,61 +296,52 @@
             }
 
             discovered.push(selectedRarity.name);
-            saveBestiary();
-
-            let resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<div class='rarity rolling' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
+            setCookie("bestiary", discovered);
+            document.getElementById("result").innerHTML = `<div class='rarity ${maxPity ? 'high-impact' : 'rolling'}' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
 
             setTimeout(() => {
-                resultDiv.querySelector('.rarity').style.opacity = 1;
-                resultDiv.querySelector('.rarity').style.animation = "roll 1s ease-in-out";
-            }, 100);
-
-            setTimeout(() => {
-                resultDiv.querySelector('.rarity').style.animation = "";  // Reset animation after it finishes
+                document.querySelector(".rarity").classList.remove("rolling", "high-impact");
             }, 1000);
 
             flashScreen(selectedRarity.gradient);
 
-            if (rarities.findIndex(r => r.name === selectedRarity.name) >= rarities.length - 5) {
-                playCutscene(selectedRarity.name);
-            }
+            rollCount++;
+            updatePity();
+            setCookie("rollCount", rollCount);
         }
 
+        // Flash Screen Effect
         function flashScreen(color) {
-            if (rarities.findIndex(r => r.name === color) >= rarities.findIndex(r => r.name === "Mythic")) {
-                let flashOverlay = document.getElementById("flashOverlay");
-                flashOverlay.style.backgroundColor = color;
-                flashOverlay.style.display = "block";
-                setTimeout(() => {
-                    flashOverlay.style.display = "none";
-                }, 300);
-            }
-        }
-
-        function playCutscene(rarityName) {
+            let flashOverlay = document.getElementById("flashOverlay");
+            flashOverlay.style.backgroundColor = color;
+            flashOverlay.style.display = "block";
             setTimeout(() => {
-                alert("You obtained a rare item: " + rarityName + "! A mysterious force surrounds you...");
+                flashOverlay.style.display = "none";
             }, 500);
         }
 
+        // Toggle Bestiary
         function toggleBestiary() {
             let bestiaryDiv = document.getElementById("bestiary");
             bestiaryDiv.style.display = bestiaryDiv.style.display === "none" ? "block" : "none";
 
             let bestiaryHTML = "<h2>Bestiary</h2>";
             rarities.forEach(rarity => {
-                bestiaryHTML += `<div class='bestiary-item' style='background: ${discovered.includes(rarity.name) ? rarity.gradient : "#444"}'>
-                                    <div class="name">${discovered.includes(rarity.name) ? rarity.name : "???"}</div>
-                                  </div>`;
+                bestiaryHTML += `<div class='bestiary-item'><span class='name ${discovered.includes(rarity.name) ? 'discovered' : 'undiscovered'}'>${discovered.includes(rarity.name) ? rarity.name : "???"}</span></div>`;
             });
 
             bestiaryDiv.innerHTML = bestiaryHTML;
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            toggleBestiary();
-        });
+        // Toggle Trade Code
+        function toggleTradeCode() {
+            const tradeCodeDiv = document.getElementById("tradeCode");
+            tradeCodeDiv.style.display = tradeCodeDiv.style.display === "none" ? "block" : "none";
+            generateTradeCode();
+        }
+
+        // Initialize Game State
+        updatePity();
     </script>
 </body>
 </html>
