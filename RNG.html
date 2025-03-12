@@ -198,6 +198,41 @@
             display: none;
         }
 
+        /* Trade Modal */
+        #tradeModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            display: none;
+            width: 400px;
+            box-sizing: border-box;
+        }
+
+        #tradeModal input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            color: #000;
+        }
+
+        #tradeModal button {
+            margin-top: 15px;
+            background: #444;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
     </style>
 </head>
 <body>
@@ -212,8 +247,16 @@
 
     <!-- Pity and Trade Section -->
     <div id="pity">Rolls until Max Pity: <span id="pityCount">50</span></div>
-    <button id="tradeButton" onclick="toggleTradeCode()">Generate Trading Code</button>
+    <button id="tradeButton" onclick="toggleTradeModal()">Generate Trading Code</button>
     <div id="tradeCode">Your Trade Code: <span id="tradeCodeValue"></span></div>
+
+    <!-- Trade Modal -->
+    <div id="tradeModal">
+        <h2>Enter Trade Code</h2>
+        <input type="text" id="tradeCodeInput" placeholder="Enter code to trade" />
+        <button onclick="handleTrade()">Trade</button>
+        <button onclick="closeTradeModal()">Close</button>
+    </div>
 
     <script>
         const rarities = [
@@ -241,47 +284,15 @@
 
         // Pity System
         function updatePity() {
-            const pityCount = document.getElementById("pityCount");
-            pityCount.textContent = pityThreshold - rollCount;
-            if (rollCount >= pityThreshold) {
+            const pityCount = pityThreshold - rollCount;
+            document.getElementById("pityCount").textContent = pityCount > 0 ? pityCount : 0;
+            if (pityCount <= 0) {
                 maxPity = true;
             }
         }
 
-        // Save Data to Cookie
-        function setCookie(name, value, days = 7) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
-        }
-
-        function getCookie(name) {
-            let cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                let [key, value] = cookie.trim().split('=');
-                if (key === name) {
-                    return JSON.parse(decodeURIComponent(value));
-                }
-            }
-            return [];
-        }
-
-        // Trade System
-        function generateTradeCode() {
-            const code = Math.random().toString(36).substring(2, 10);
-            document.getElementById("tradeCodeValue").textContent = code;
-        }
-
-        // Roll Rarity with Pity and Luck Increase
+        // Roll Rarity
         function rollRarity() {
-            if (rollCooldown) return;
-            rollCooldown = true;
-            document.getElementById("rollButton").disabled = true;
-            setTimeout(() => {
-                rollCooldown = false;
-                document.getElementById("rollButton").disabled = false;
-            }, 500);
-
             let totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
             let random = Math.random() * totalWeight;
             let cumulativeWeight = 0;
@@ -297,14 +308,17 @@
 
             discovered.push(selectedRarity.name);
             setCookie("bestiary", discovered);
-            document.getElementById("result").innerHTML = `<div class='rarity ${maxPity ? 'high-impact' : 'rolling'}' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
 
+            // Apply animation and flash effects
+            document.getElementById("result").innerHTML = `<div class='rarity ${maxPity ? 'high-impact' : 'rolling'}' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
             setTimeout(() => {
                 document.querySelector(".rarity").classList.remove("rolling", "high-impact");
             }, 1000);
 
+            // Flash effect
             flashScreen(selectedRarity.gradient);
 
+            // Update pity system
             rollCount++;
             updatePity();
             setCookie("rollCount", rollCount);
@@ -320,7 +334,7 @@
             }, 500);
         }
 
-        // Toggle Bestiary
+        // Bestiary Toggle
         function toggleBestiary() {
             let bestiaryDiv = document.getElementById("bestiary");
             bestiaryDiv.style.display = bestiaryDiv.style.display === "none" ? "block" : "none";
@@ -333,15 +347,52 @@
             bestiaryDiv.innerHTML = bestiaryHTML;
         }
 
-        // Toggle Trade Code
-        function toggleTradeCode() {
-            const tradeCodeDiv = document.getElementById("tradeCode");
-            tradeCodeDiv.style.display = tradeCodeDiv.style.display === "none" ? "block" : "none";
-            generateTradeCode();
+        // Trade System
+        let tradeCode = generateTradeCode();
+        document.getElementById("tradeCodeValue").textContent = tradeCode;
+
+        // Generate a unique trade code
+        function generateTradeCode() {
+            return Math.random().toString(36).substring(2, 10);  // Generates a short code
         }
 
-        // Initialize Game State
-        updatePity();
+        // Show trade modal
+        function toggleTradeModal() {
+            document.getElementById("tradeModal").style.display = "block";
+        }
+
+        // Close trade modal
+        function closeTradeModal() {
+            document.getElementById("tradeModal").style.display = "none";
+        }
+
+        // Handle trade logic
+        function handleTrade() {
+            let inputCode = document.getElementById("tradeCodeInput").value;
+            if (inputCode === tradeCode) {
+                alert("Trade successful! You received an item.");
+                // You can add more trade functionality here, like adding an item to their inventory
+            } else {
+                alert("Invalid trade code.");
+            }
+        }
+
+        // Cookie Functions
+        function setCookie(name, value) {
+            document.cookie = name + "=" + JSON.stringify(value) + "; path=/; max-age=31536000";  // 1 year
+        }
+
+        function getCookie(name) {
+            let cookieArr = document.cookie.split("; ");
+            for (let i = 0; i < cookieArr.length; i++) {
+                let cookie = cookieArr[i].split("=");
+                if (cookie[0] === name) {
+                    return JSON.parse(cookie[1]);
+                }
+            }
+            return [];
+        }
+
     </script>
 </body>
 </html>
