@@ -1,166 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greed RNG</title>
-    <style>
-        body {
-            text-align: center;
-            font-family: 'Arial', sans-serif;
-            background: #1e1e1e;
-            color: white;
-            margin: 0;
-            padding: 0;
-            transition: background 0.5s;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greed RNG</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      background: #1e1e1e;
+      color: white;
+      margin: 0;
+      padding: 0;
+      transition: background 0.5s;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
 
-        .container {
-            padding: 40px;
-            max-width: 600px;
-            margin: auto;
-        }
+    .container {
+      padding: 40px;
+      max-width: 600px;
+      margin: auto;
+    }
 
-        h1 {
-            font-size: 36px;
-            margin-bottom: 20px;
-            color: #f1f1f1;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
-        }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #f1f1f1;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    }
 
-        button {
-            background: #333;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            margin: 15px;
-            cursor: pointer;
-            border-radius: 10px;
-            font-size: 18px;
-            transition: background 0.3s;
-        }
+    button {
+      background: #333;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 15px;
+      cursor: pointer;
+      border-radius: 10px;
+      font-size: 18px;
+      transition: background 0.3s;
+    }
 
-        button:hover {
-            background: #444;
-        }
+    button:hover {
+      background: #444;
+    }
 
-        .rarity {
-            padding: 20px;
-            margin: 15px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 20px;
-        }
+    .rarity {
+      padding: 20px;
+      margin: 15px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 20px;
+    }
 
-        #bestiary {
-            width: 250px;
-            background: #2a2a2a;
-            padding: 20px;
-            border-radius: 10px;
-            position: absolute;
-            left: 10px;
-            top: 50px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+    #bestiary {
+      width: 250px;
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 10px;
+      position: absolute;
+      left: 10px;
+      top: 50px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
 
-        #bestiary h2 {
-            font-size: 20px;
-        }
+    #bestiary h2 {
+      font-size: 20px;
+    }
 
-        .bestiary-item {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-        }
+    .bestiary-item {
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
 
-        .pity-ui {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-    </style>
+    .pity-ui {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <div id="bestiary">
-        <h2>Bestiary</h2>
-        <div id="bestiary-list"></div>
-    </div>
+  <div id="bestiary">
+    <h2>Bestiary</h2>
+    <div id="bestiary-list"></div>
+  </div>
 
-    <div class="container">
-        <h1>Greed RNG</h1>
-        <button id="rollButton" onclick="rollRarity()">Roll</button>
-        <div id="result"></div>
-    </div>
+  <div class="container">
+    <h1>Greed RNG</h1>
+    <button id="rollButton" onclick="rollRarity()">Roll</button>
+    <div id="result"></div>
+  </div>
 
-    <div class="pity-ui">Pity: <span id="pity-count">0</span>/50</div>
+  <div class="pity-ui">Pity: <span id="pity-count">0</span>/50</div>
 
-    <script>
-        const rarities = [
-            { name: "Common", color: "gray" },
-            { name: "Uncommon", color: "green" },
-            { name: "Rare", color: "blue" },
-            { name: "Epic", color: "purple" },
-            { name: "Legendary", color: "orange" },
-            { name: "Mythic", color: "red" },
-            { name: "Divine", color: "gold" },
-            { name: "Celestial", color: "skyblue" },
-            { name: "Abyssal", color: "black" },
-            { name: "Omniscient", color: "white", textColor: "black" },
-            { name: "Ethereal", color: "cyan" },
-            { name: "Phantom", color: "violet" },
-            { name: "Arcane", color: "magenta" },
-            { name: "Voidborn", color: "darkblue" },
-            { name: "Infinity", color: "silver" },
-            { name: "Transcendent", color: "lime" },
-            { name: "Cosmic", color: "pink" },
-            { name: "Eldritch", color: "maroon" },
-            { name: "Exalted", color: "goldenrod" },
-            { name: "Singularity", color: "darkviolet" }
-        ];
+  <script>
+    // Increased rarity weight disparity to make rarer rarities harder to get.
+    const rarities = [
+      { name: "Common", color: "gray", weight: 50 },
+      { name: "Uncommon", color: "green", weight: 40 },
+      { name: "Rare", color: "blue", weight: 30 },
+      { name: "Epic", color: "purple", weight: 20 },
+      { name: "Legendary", color: "orange", weight: 15 },
+      { name: "Mythic", color: "red", weight: 10 },
+      { name: "Divine", color: "gold", weight: 8 },
+      { name: "Celestial", color: "skyblue", weight: 6 },
+      { name: "Abyssal", color: "black", weight: 5 },
+      { name: "Omniscient", color: "white", textColor: "black", weight: 4 },
+      { name: "Ethereal", color: "cyan", weight: 3 },
+      { name: "Phantom", color: "violet", weight: 2 },
+      { name: "Arcane", color: "magenta", weight: 1 },
+      { name: "Voidborn", color: "darkblue", weight: 0.8 },
+      { name: "Infinity", color: "silver", weight: 0.5 },
+      { name: "Transcendent", color: "lime", weight: 0.3 },
+      { name: "Cosmic", color: "pink", weight: 0.2 },
+      { name: "Eldritch", color: "maroon", weight: 0.1 },
+      { name: "Exalted", color: "goldenrod", weight: 0.05 },
+      { name: "Singularity", color: "darkviolet", weight: 0.01 }
+    ];
 
-        let discovered = [];
-        let pity = 0;
-
-        function rollRarity() {
-            let randomIndex = Math.floor(Math.random() * rarities.length);
-            let selectedRarity = rarities[randomIndex];
-
-            pity++;
-            if (pity >= 50) {
-                pity = 0;
-            }
-
-            document.getElementById("pity-count").textContent = pity;
-
-            if (!discovered.includes(selectedRarity.name)) {
-                discovered.push(selectedRarity.name);
-                updateBestiary();
-            }
-
-            let resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `<div class='rarity' style='background: ${selectedRarity.color}; color: ${selectedRarity.textColor || "white"}'>${selectedRarity.name}</div>`;
+    // Function to get a cookie by name
+    function getCookie(name) {
+      let decodedCookie = decodeURIComponent(document.cookie);
+      let ca = decodedCookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(name + "=") === 0) {
+          return c.substring(name.length + 1, c.length);
         }
+      }
+      return "";
+    }
 
-        function updateBestiary() {
-            let bestiaryList = document.getElementById("bestiary-list");
-            bestiaryList.innerHTML = "";
-            rarities.forEach(rarity => {
-                let rarityName = discovered.includes(rarity.name) ? rarity.name : "???";
-                let color = discovered.includes(rarity.name) ? rarity.color : "#444";
-                let textColor = rarity.textColor || "white";
-                if (rarity.name === "Omniscient") textColor = "black";
-                
-                bestiaryList.innerHTML += `<div class='bestiary-item' style='background: ${color}; color: ${textColor}'>${rarityName}</div>`;
-            });
+    // Function to set a cookie with a name, value, and expiration in days
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      let expires = "expires=" + d.toUTCString();
+      document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+    // Retrieve saved game data from cookies
+    let discovered = JSON.parse(getCookie("discovered") || "[]");
+    let pity = parseInt(getCookie("pity") || "0");
+
+    function rollRarity() {
+      // Calculate total weight.
+      let totalWeight = rarities.reduce((acc, rarity) => acc + rarity.weight, 0);
+      // Generate a random number between 0 and totalWeight.
+      let random = Math.random() * totalWeight;
+      let selectedRarity;
+      // Iterate through rarities using the weight.
+      for (let rarity of rarities) {
+        if (random < rarity.weight) {
+          selectedRarity = rarity;
+          break;
         }
-    </script>
+        random -= rarity.weight;
+      }
+
+      // Update pity counter.
+      pity++;
+      if (pity >= 50) {
+        pity = 0;
+      }
+
+      // Save pity to cookies
+      setCookie("pity", pity, 7); // Cookie expires in 7 days
+
+      document.getElementById("pity-count").textContent = pity;
+
+      // Add new rarity to bestiary if not already discovered.
+      if (!discovered.includes(selectedRarity.name)) {
+        discovered.push(selectedRarity.name);
+        updateBestiary();
+        // Save discovered rarities to cookies
+        setCookie("discovered", JSON.stringify(discovered), 7); // Cookie expires in 7 days
+      }
+
+      // Display the selected rarity.
+      let resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = `<div class='rarity' style='background: ${selectedRarity.color}; color: ${selectedRarity.textColor || "white"}'>${selectedRarity.name}</div>`;
+    }
+
+    function updateBestiary() {
+      let bestiaryList = document.getElementById("bestiary-list");
+      bestiaryList.innerHTML = "";
+      rarities.forEach(rarity => {
+        let rarityName = discovered.includes(rarity.name) ? rarity.name : "???";
+        let color = discovered.includes(rarity.name) ? rarity.color : "#444";
+        let textColor = rarity.textColor || "white";
+        if (rarity.name === "Omniscient") textColor = "black";
+
+        bestiaryList.innerHTML += `<div class='bestiary-item' style='background: ${color}; color: ${textColor}'>${rarityName}</div>`;
+      });
+    }
+
+    // Initialize the bestiary on page load based on saved data
+    updateBestiary();
+    document.getElementById("pity-count").textContent = pity;
+  </script>
 </body>
 </html>
