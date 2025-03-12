@@ -51,18 +51,6 @@
             background: #666;
         }
 
-        /* Pity and Luck Display */
-        #pity {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            font-size: 18px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-        }
-
         /* Rarity Display */
         .rarity {
             display: inline-block;
@@ -84,17 +72,6 @@
         @keyframes roll {
             0% { opacity: 0; transform: scale(0.5); }
             50% { opacity: 1; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* Enhanced Animation for High Rarities */
-        .rarity.high-impact {
-            animation: highImpact 1.5s ease-in-out;
-        }
-
-        @keyframes highImpact {
-            0% { opacity: 0; transform: scale(0.3); }
-            50% { opacity: 1; transform: scale(1.8); }
             100% { opacity: 1; transform: scale(1); }
         }
 
@@ -174,88 +151,16 @@
             color: gray;
         }
 
-        /* Trade Button and Code Display */
-        #tradeButton {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            font-size: 18px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-        }
-
-        #tradeCode {
-            position: fixed;
-            top: 60px;
-            left: 20px;
-            font-size: 18px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-            display: none;
-        }
-
-        /* Trade Modal */
-        #tradeModal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            display: none;
-            width: 400px;
-            box-sizing: border-box;
-        }
-
-        #tradeModal input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 15px;
-            border-radius: 8px;
-            border: 1px solid #fff;
-            color: #000;
-        }
-
-        #tradeModal button {
-            margin-top: 15px;
-            background: #444;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 18px;
-        }
-
     </style>
 </head>
 <body>
     <div id="flashOverlay"></div>
     <div class="container">
-        <h1>Greed RNG</h1>
+        <h1>Gambling Unblocked</h1>
         <button id="rollButton" onclick="rollRarity()">Roll</button>
         <button onclick="toggleBestiary()">Bestiary</button>
         <div id="result"></div>
         <div id="bestiary"></div>
-    </div>
-
-    <!-- Pity and Trade Section -->
-    <div id="pity">Rolls until Max Pity: <span id="pityCount">50</span></div>
-    <button id="tradeButton" onclick="toggleTradeModal()">Generate Trading Code</button>
-    <div id="tradeCode">Your Trade Code: <span id="tradeCodeValue"></span></div>
-
-    <!-- Trade Modal -->
-    <div id="tradeModal">
-        <h2>Enter Trade Code</h2>
-        <input type="text" id="tradeCodeInput" placeholder="Enter code to trade" />
-        <button onclick="handleTrade()">Trade</button>
-        <button onclick="closeTradeModal()">Close</button>
     </div>
 
     <script>
@@ -277,22 +182,39 @@
             { name: "Infinity", gradient: "silver", weight: 0.02 }
         ];
 
-        let discovered = getCookie("bestiary") || [];
-        let rollCount = parseInt(getCookie("rollCount") || "0");
-        let maxPity = false;
-        let pityThreshold = 50;
-
-        // Pity System
-        function updatePity() {
-            const pityCount = pityThreshold - rollCount;
-            document.getElementById("pityCount").textContent = pityCount > 0 ? pityCount : 0;
-            if (pityCount <= 0) {
-                maxPity = true;
+        function getCookie(name) {
+            let cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                let [key, value] = cookie.trim().split('=');
+                if (key === name) {
+                    return JSON.parse(decodeURIComponent(value));
+                }
             }
+            return [];
         }
 
-        // Roll Rarity
+        function setCookie(name, value, days = 7) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/`;
+        }
+
+        let discovered = getCookie("bestiary") || [];
+        let rollCooldown = false;
+
+        function saveBestiary() {
+            setCookie("bestiary", discovered);
+        }
+
         function rollRarity() {
+            if (rollCooldown) return;
+            rollCooldown = true;
+            document.getElementById("rollButton").disabled = true;
+            setTimeout(() => {
+                rollCooldown = false;
+                document.getElementById("rollButton").disabled = false;
+            }, 500);  // Cooldown reduced to 0.5 seconds
+
             let totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
             let random = Math.random() * totalWeight;
             let cumulativeWeight = 0;
@@ -307,92 +229,61 @@
             }
 
             discovered.push(selectedRarity.name);
-            setCookie("bestiary", discovered);
+            saveBestiary();
 
-            // Apply animation and flash effects
-            document.getElementById("result").innerHTML = `<div class='rarity ${maxPity ? 'high-impact' : 'rolling'}' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
+            let resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `<div class='rarity rolling' style='background: ${selectedRarity.gradient}'>${selectedRarity.name}</div>`;
+
             setTimeout(() => {
-                document.querySelector(".rarity").classList.remove("rolling", "high-impact");
+                resultDiv.querySelector('.rarity').style.opacity = 1;
+                resultDiv.querySelector('.rarity').style.animation = "roll 1s ease-in-out";
+            }, 100);
+
+            setTimeout(() => {
+                resultDiv.querySelector('.rarity').style.animation = "";  // Reset animation after it finishes
             }, 1000);
 
-            // Flash effect
             flashScreen(selectedRarity.gradient);
 
-            // Update pity system
-            rollCount++;
-            updatePity();
-            setCookie("rollCount", rollCount);
+            if (rarities.findIndex(r => r.name === selectedRarity.name) >= rarities.length - 5) {
+                playCutscene(selectedRarity.name);
+            }
         }
 
-        // Flash Screen Effect
         function flashScreen(color) {
-            let flashOverlay = document.getElementById("flashOverlay");
-            flashOverlay.style.backgroundColor = color;
-            flashOverlay.style.display = "block";
+            if (rarities.findIndex(r => r.name === color) >= rarities.findIndex(r => r.name === "Mythic")) {
+                let flashOverlay = document.getElementById("flashOverlay");
+                flashOverlay.style.backgroundColor = color;
+                flashOverlay.style.display = "block";
+                setTimeout(() => {
+                    flashOverlay.style.display = "none";
+                }, 300);
+            }
+        }
+
+        function playCutscene(rarityName) {
             setTimeout(() => {
-                flashOverlay.style.display = "none";
+                alert("You obtained a rare item: " + rarityName + "! A mysterious force surrounds you...");
             }, 500);
         }
 
-        // Bestiary Toggle
         function toggleBestiary() {
             let bestiaryDiv = document.getElementById("bestiary");
             bestiaryDiv.style.display = bestiaryDiv.style.display === "none" ? "block" : "none";
 
             let bestiaryHTML = "<h2>Bestiary</h2>";
             rarities.forEach(rarity => {
-                bestiaryHTML += `<div class='bestiary-item'><span class='name ${discovered.includes(rarity.name) ? 'discovered' : 'undiscovered'}'>${discovered.includes(rarity.name) ? rarity.name : "???"}</span></div>`;
+                bestiaryHTML += `<div class='bestiary-item' style='background: ${discovered.includes(rarity.name) ? rarity.gradient : "#444"}'>
+                                    <div class="name">${discovered.includes(rarity.name) ? rarity.name : "???"}</div>
+                                  </div>`;
             });
 
             bestiaryDiv.innerHTML = bestiaryHTML;
         }
 
-        // Trade System
-        let tradeCode = generateTradeCode();
-        document.getElementById("tradeCodeValue").textContent = tradeCode;
-
-        // Generate a unique trade code
-        function generateTradeCode() {
-            return Math.random().toString(36).substring(2, 10);  // Generates a short code
-        }
-
-        // Show trade modal
-        function toggleTradeModal() {
-            document.getElementById("tradeModal").style.display = "block";
-        }
-
-        // Close trade modal
-        function closeTradeModal() {
-            document.getElementById("tradeModal").style.display = "none";
-        }
-
-        // Handle trade logic
-        function handleTrade() {
-            let inputCode = document.getElementById("tradeCodeInput").value;
-            if (inputCode === tradeCode) {
-                alert("Trade successful! You received an item.");
-                // You can add more trade functionality here, like adding an item to their inventory
-            } else {
-                alert("Invalid trade code.");
-            }
-        }
-
-        // Cookie Functions
-        function setCookie(name, value) {
-            document.cookie = name + "=" + JSON.stringify(value) + "; path=/; max-age=31536000";  // 1 year
-        }
-
-        function getCookie(name) {
-            let cookieArr = document.cookie.split("; ");
-            for (let i = 0; i < cookieArr.length; i++) {
-                let cookie = cookieArr[i].split("=");
-                if (cookie[0] === name) {
-                    return JSON.parse(cookie[1]);
-                }
-            }
-            return [];
-        }
-
+        document.addEventListener("DOMContentLoaded", () => {
+            toggleBestiary();
+        });
     </script>
 </body>
 </html>
