@@ -14,6 +14,9 @@
             margin: 0;
             padding: 0;
             transition: background 0.5s;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
         }
 
         .container {
@@ -21,6 +24,11 @@
             max-width: 800px;
             margin: 0 auto;
             box-sizing: border-box;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         h1 {
@@ -108,13 +116,16 @@
             padding: 20px;
             background: #2a2a2a;
             border-radius: 15px;
-            display: none;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 300px;
+            width: 250px;
+            height: 100%;
             box-sizing: border-box;
             overflow-y: auto;
-            max-height: 300px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            display: block;
         }
 
         #bestiary h2 {
@@ -173,12 +184,14 @@
     <div class="container">
         <h1>Greed RNG</h1>
         <button id="rollButton" onclick="rollRarity()">Roll</button>
-        <button onclick="toggleBestiary()">Bestiary</button>
         <div id="result"></div>
-        <div id="bestiary"></div>
     </div>
 
     <div id="pityCounter">Pity: 0/50</div>
+
+    <div id="bestiary">
+        <h2>Bestiary</h2>
+    </div>
 
     <script>
         const rarities = [
@@ -303,7 +316,6 @@
 
         function toggleBestiary() {
             let bestiaryDiv = document.getElementById("bestiary");
-            bestiaryDiv.style.display = bestiaryDiv.style.display === "none" ? "block" : "none";
 
             let bestiaryHTML = "<h2>Bestiary</h2>";
             rarities.forEach(rarity => {
