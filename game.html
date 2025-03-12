@@ -308,7 +308,7 @@
             let bestiaryHTML = "<h2>Bestiary</h2>";
             rarities.forEach(rarity => {
                 bestiaryHTML += `<div class='bestiary-item' style='background: ${discovered.includes(rarity.name) ? rarity.gradient : "#444"}'>
-                                    <div class="name">${discovered.includes(rarity.name) ? rarity.name : "???"}</div>
+                                    <div class="name" style="color: ${discovered.includes(rarity.name) && rarity.name === 'Omniscient' ? 'black' : 'white'}">${discovered.includes(rarity.name) ? rarity.name : "???"}</div>
                                   </div>`;
             });
             bestiaryDiv.innerHTML = bestiaryHTML;
