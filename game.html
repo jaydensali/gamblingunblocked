@@ -268,7 +268,9 @@
 
             // Increase pity counter and check for max pity
             pity++;
-            if (pity > 50) pity = 50;
+            if (pity >= 50) {
+                pity = 0; // Reset pity when max is reached
+            }
 
             // Luck multiplier effect: Reset pity to 0 when luck is doubled and pity is 50
             if (pity === 50 && luckMultiplier === 2) {
