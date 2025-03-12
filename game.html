@@ -6,121 +6,123 @@
     <title>Greed RNG</title>
     <style>
         body {
+            text-align: center;
             font-family: 'Arial', sans-serif;
             background: #1e1e1e;
             color: white;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: space-between;
+            transition: background 0.5s;
         }
-        
+
         .container {
-            text-align: center;
-            flex-grow: 1;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
-        
-        .bestiary {
-            width: 250px;
-            background: #2a2a2a;
-            padding: 20px;
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #f1f1f1;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 15px;
+            cursor: pointer;
             border-radius: 10px;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button:disabled {
+            background: #666;
+        }
+
+        #bestiary {
+            position: absolute;
+            left: 20px;
+            top: 80px;
+            width: 200px;
+            height: 300px;
+            border: 2px solid white;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 15px;
             overflow-y: auto;
         }
-        
-        .pity {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #444;
+
+        #pityUI {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.6);
             padding: 10px;
             border-radius: 10px;
         }
-        
-        .shop {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: #333;
+
+        #shop {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
             padding: 15px;
             border-radius: 10px;
-        }
-        
-        button {
-            margin: 10px;
-            padding: 10px;
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="bestiary" id="bestiary"></div>
+    <div id="pityUI">Pity: 0/50</div>
+    <div id="bestiary"><h2>Bestiary</h2></div>
     <div class="container">
         <h1>Greed RNG</h1>
-        <button onclick="rollRarity()">Roll</button>
+        <button id="rollButton" onclick="rollRarity()">Roll</button>
         <div id="result"></div>
     </div>
-    <div class="pity" id="pity">Pity: 0/50</div>
-    <div class="shop" id="shop">
-        Coins: <span id="coins">0</span><br>
+    <div id="shop">
+        <h3>Shop</h3>
         <button onclick="buyPotion(2, 1.5)">Basic Potion (2 Coins)</button>
         <button onclick="buyPotion(15, 5)">High Potion (15 Coins)</button>
         <button onclick="buyPotion(25, 10)">Sigma Potion (25 Coins)</button>
     </div>
-    
+
     <script>
-        let pity = 0, coins = 0, luckMultiplier = 1;
-        let discovered = JSON.parse(localStorage.getItem("bestiary")) || [];
-        let rarities = [
-            { name: "Common", gradient: "gray", weight: 40 },
-            { name: "Uncommon", gradient: "green", weight: 25 },
-            { name: "Rare", gradient: "blue", weight: 15 },
-            { name: "Epic", gradient: "purple", weight: 8 },
-            { name: "Legendary", gradient: "orange", weight: 5 },
-            { name: "Mythic", gradient: "red", weight: 3 },
-            { name: "Omniscient", gradient: "linear-gradient(black, white)", weight: 0.2, text: "black" },
-            { name: "Ethereal", gradient: "linear-gradient(cyan, magenta)", weight: 0.15 },
-            { name: "Voidborn", gradient: "linear-gradient(darkblue, purple)", weight: 0.05 }
-        ];
-        
+        let pity = 0;
+        let coins = 0;
+        let luckMultiplier = 1;
+        let discovered = [];
+
         function rollRarity() {
-            let totalWeight = rarities.reduce((sum, r) => sum + r.weight * luckMultiplier, 0);
-            let random = Math.random() * totalWeight, selected;
-            
-            for (let r of rarities) {
-                random -= r.weight * luckMultiplier;
-                if (random <= 0) { selected = r; break; }
-            }
-            
-            if (discovered.includes(selected.name)) coins++;
-            else discovered.push(selected.name);
-            
             pity++;
-            if (pity >= 50) { pity = 0; luckMultiplier *= 2; }
-            
-            localStorage.setItem("bestiary", JSON.stringify(discovered));
-            updateUI(selected);
+            if (pity >= 50) {
+                luckMultiplier *= 2;
+                pity = 0;
+            }
+            updateUI();
         }
-        
-        function updateUI(selected) {
-            document.getElementById("result").innerHTML = `<div style='background:${selected.gradient};padding:20px;'>${selected.name}</div>`;
-            document.getElementById("pity").innerText = `Pity: ${pity}/50`;
-            document.getElementById("coins").innerText = coins;
-            renderBestiary();
-        }
-        
-        function renderBestiary() {
-            document.getElementById("bestiary").innerHTML = rarities.map(r =>
-                `<div style='background:${r.gradient};color:${r.text || "white"}'>${discovered.includes(r.name) ? r.name : "???"}</div>`
-            ).join("");
-        }
-        
+
         function buyPotion(cost, multiplier) {
-            if (coins >= cost) { coins -= cost; luckMultiplier *= multiplier; }
-            updateUI({ name: "", gradient: "" });
+            if (coins >= cost) {
+                coins -= cost;
+                luckMultiplier *= multiplier;
+                updateUI();
+            }
         }
-        
-        renderBestiary();
+
+        function updateUI() {
+            document.getElementById("pityUI").innerText = `Pity: ${pity}/50`;
+        }
     </script>
 </body>
 </html>
